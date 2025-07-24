@@ -1,5 +1,5 @@
 
-# 🇷🇺 Russian Housing Price Prediction (ml‑russian‑house‑prices)
+#Russian Housing Price Prediction (ml‑russian‑house‑prices)
 
 A concise, practice‑oriented solution for the **Sberbank Russian Housing Market** Kaggle competition.  
 The repository now keeps only the essential artefacts:
