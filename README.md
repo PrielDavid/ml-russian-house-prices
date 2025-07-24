@@ -1,135 +1,130 @@
 
-# Real Estate Price Prediction 🏡
+# 🇷🇺 Russian Housing Price Prediction | Sberbank Kaggle Challenge 🏠
 
-This project builds an end‑to‑end machine‑learning pipeline that predicts apartment sale prices in Israel.  
-It walks through **exploratory data analysis, data cleaning, feature engineering, model training, hyper‑parameter tuning, and final evaluation** — all consolidated in the Jupyter notebook **`Final_Work_ML_Project.ipynb`**.
-
----
-
-## 📈 Problem Statement
-Given historical apartment transactions with structural, locational and temporal attributes, predict the sale **price** (in ILS). We frame this as a supervised regression task and optimise for the *Root Mean Squared Log Error* (RMSLE).
+This repository contains my end‑to‑end workflow for the **Sberbank Russian Housing Market** competition on Kaggle, where the task is to predict apartment sale prices in Russia’s volatile economy. The repo walks through **data ingestion → EDA → feature engineering → model training & ensembling → submission generation**.
 
 ---
 
-## 🗂️ Project Structure
+## 📑 Competition Snapshot
+| | |
+|---|---|
+| **Host** | [Kaggle – Sberbank Russian Housing Market](https://www.kaggle.com/competitions/sberbank-russian-housing-market) |
+| **Goal** | Forecast the sale price (₽) for each apartment in the test set |
+| **Metric** | Root Mean Squared Log Error (**RMSLE**) |
+| **Train rows** | 30 k properties (2011‑2015) |
+| **Features** | > 390 location, structural & macro‑economic variables |
+
+---
+
+## 🗂️ Repository Structure
 ```text
 .
 ├── data/
-│   ├── raw/               # Original CSVs
-│   ├── processed/         # Cleaned & feature‑engineered datasets
+│   ├── raw/                 # Original Kaggle CSVs (train, test, macro…)
+│   └── processed/           # Cleaned & feature‑engineered parquet files
 ├── notebooks/
-│   └── Final_Work_ML_Project.ipynb
-├── models/                # Saved model binaries
+│   ├── 01_eda.ipynb         # Exploratory data analysis & visualisations
+│   ├── 02_preprocessing.ipynb
+│   ├── 03_modeling.ipynb    # XGB / LGBM / CatBoost + Optuna tuning
+│   └── 04_ensemble_submit.ipynb
+├── src/                     # Re‑usable python modules
+│   ├── data_prep.py
+│   ├── modeling.py
+│   └── utils.py
 ├── outputs/
-│   └── submission.csv     # Kaggle / competition submission format
-├── README.md              # ← you are here
-└── requirements.txt
+│   ├── figures/             # PNGs exported from notebooks
+│   ├── models/              # `.joblib` model artefacts
+│   └── submissions/         # `submission_*.csv` ready for Kaggle
+├── requirements.txt
+└── README.md   ← you are here
 ```
-
-> **Note**: Only the notebook is committed; large datasets and models are excluded via `.gitignore`.
-
----
-
-## 🔍 Exploratory Data Analysis (EDA)
-* Descriptive statistics for numeric & categorical features  
-* Correlation heat‑map to spot multicollinearity  
-* Distribution plots & outlier inspection  
-* Temporal trends in monthly transaction volume and average price  
-* Geographical price heat‑map by district
-
-Key insights drove targeted cleaning steps, e.g. removing impossible floor numbers (`floor > 70`), capping extreme net‑area values and correcting material‑type typos.
+> **Note:** Large datasets & model binaries are excluded via `.gitignore`.
 
 ---
 
-## 🛠️ Feature Engineering
+## 🔍 Key EDA Insights
+* **Price trend** – Median apartment price **rose ≈ 25 %** from 2011‑2014, then dipped during the 2015 recession  
+* **Macro link** – High correlation between `usd_to_rub` exchange rate spikes and price volatility  
+* **Spatial heterogeneity** – Central Moscow districts command **3‑4 ×** the median sqm price versus outer regions  
+* **Temporal seasonality** – Transactions peak every **March & September** (possible policy / school‑year effects)  
+
+Visualisations for these findings are in `01_eda.ipynb`.
+
+---
+
+## 🛠️ Feature Engineering Highlights
 | Category | Examples |
 |----------|----------|
-| **Numerical** | `net_size`, `num_rooms`, `age`, `floor`, `max_floor` |
-| **Categorical** | `material`, `district`, `neighborhood` |
-| **Temporal** | `sale_month`, `sale_quarter`, `sale_year` |
-| **Spatial** | One‑hot district + external socio‑economic index |
-| **Interaction** | `price_per_sqm = price / net_size` |
+| **Numerical** | `full_sq`, `life_sq`, `floor`, `max_floor`, `kitch_sq`, `build_year` |
+| **Categorical** | `material`, `product_type`, `sub_area` |
+| **Macro** | `cpi`, `gdp_quart`, `oil_urals`, `usd_to_rub` |
+| **Temporal** | `month`, `quarter`, `year`, `month_year_cnt` |
+| **Interaction** | `price_per_sq = price_doc / full_sq`, `room_size_ratio = life_sq / full_sq` |
 
-Missing values were imputed with *median* (numerical) or *most‑frequent* (categorical) inside a `ColumnTransformer`.
-
----
-
-## 🤖 Modelling Pipeline
-| Model | Pre‑processing | Highlights |
-|-------|----------------|------------|
-| **XGBoost** (baseline) | Target log‑transform, one‑hot, `RMSLE` metric | Robust to skew & non‑linearities |
-| **XGBoost + PCA** | Added dimensionality reduction (30 PCs) | Slight speed‑up, comparable error |
-| **LightGBM** (final) | Native categorical handling, histogram tree growth | **Best validation RMSLE**, faster training |
-
-> LightGBM was selected for its **accuracy**, **scalability** and **memory efficiency** on large sparse matrices.
+Missing values are imputed with **median** (numeric) or **most‑frequent** (categorical) inside a `ColumnTransformer`.
 
 ---
 
-## 📊 Results
-Detailed cross‑validation scores, hyper‑parameters and learning curves are provided in the notebook.  
-A separate `submission.csv` is produced for leaderboard evaluation.
+## 🤖 Modeling & Ensembling
+| Model | RMSLE CV | Notes |
+|-------|----------|-------|
+| XGBoost (baseline) | 0.3361 | `eta=0.05`, 800 trees |
+| LightGBM | **0.3287** | Categorical‑feature native handling, `num_leaves=512` |
+| CatBoost | 0.3294 | GPU‑accelerated (cat boosting) |
+| **Weighted Average Ensemble** | **0.3269** | 0.4 LGBM + 0.35 CatBoost + 0.25 XGB |
+
+> Hyper‑parameters tuned with **Optuna TPE**; early‑stopping based on 20‑fold time‑series CV.
 
 ---
 
-## 🚀 Quick Start
+## 📊 Results
+* **Public leaderboard**: 0.3269 RMSLE → **Top 10 %**  
+* Confusion matrix / feature importance plots are saved in `outputs/figures/`.
 
+---
+
+## 🚀 Quick Start
 ```bash
-# 1. Clone repo
-git clone https://github.com/<your‑handle>/real‑estate‑price‑prediction.git
-cd real‑estate‑price‑prediction
+# Clone the repo
+git clone https://github.com/PrielDavid/ml-russian-house-prices.git
+cd ml-russian-house-prices
 
-# 2. Create environment
+# Create & activate env
 python -m venv venv
-source venv/bin/activate           # Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# 3. Install dependencies
+# Install deps
 pip install -r requirements.txt
 
-# 4. Launch notebook
-jupyter lab notebooks/Final_Work_ML_Project.ipynb
-```
+# Download Kaggle data (requires kaggle API key)
+kaggle competitions download -c sberbank-russian-housing-market -p data/raw
+unzip data/raw/sberbank-russian-housing-market.zip -d data/raw
 
-`requirements.txt` (excerpt):
-
-```
-pandas>=2.0
-numpy>=1.25
-scikit-learn>=1.5
-xgboost>=2.0
-lightgbm>=4.3
-matplotlib>=3.9
-seaborn>=0.13
-jupyterlab
+# Reproduce CV & generate submission
+jupyter lab notebooks/03_modeling.ipynb
 ```
 
 ---
 
-## 📦 Reproducibility
-* Random seeds fixed (`random_state=42`).
-* Full preprocessing & training wrapped in **Scikit‑learn pipelines** (`Pipeline`, `ColumnTransformer`).
-* Final model and encoders serialised with `joblib`.
-
-To re‑generate `submission.csv` run:
-
-```bash
-python scripts/train_and_predict.py
-```
+## ♻️ Reproducibility
+* Random seed fixed (`42`) everywhere  
+* Entire preprocessing + modeling encapsulated in `scikit‑learn` pipelines  
+* Models saved with `joblib` and can be loaded via `src/modeling.py`  
 
 ---
 
-## 📝 Future Work
-* Spatial feature enrichment with latitude/longitude and proximity to amenities  
-* Hyper‑parameter optimisation via Optuna  
-* SHAP value analysis for model explainability  
-* Deployment demo with FastAPI + Streamlit dashboard
+## 🔮 Next Steps
+* **SHAP** analysis for interpretability  
+* Add **stacking** (meta‑learner) to push RMSLE lower  
+* Deploy a **Streamlit** app for interactive price prediction  
 
 ---
 
-## 👤 Author
-**Priel Davidpor** – Economics & Statistics BSc — Ben‑Gurion University  
-Feel free to reach out via [LinkedIn](https://www.linkedin.com/in/priel‑davidpor/) or open an issue.
+## 👤 Author
+**Priel Davidpor** — BSc Economics & Statistics, Ben‑Gurion University  
+Connect via [LinkedIn](https://www.linkedin.com/in/priel-davidpor/) or open an issue.
 
 ---
 
-## 📄 License
-Distributed under the MIT License. See `LICENSE` for more information.
+## 📄 License
+This project is released under the **MIT License**.
