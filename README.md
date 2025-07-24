@@ -37,7 +37,6 @@ This repository contains my end‑to‑end workflow for the **Sberbank Russian�
 * **Spatial heterogeneity** – Central Moscow districts command **3‑4 ×** the median sqm price versus outer regions  
 * **Temporal seasonality** – Transactions peak every **March & September** (possible policy / school‑year effects)  
 
-Visualisations for these findings are in `01_eda.ipynb`.
 
 ---
 
