@@ -47,13 +47,11 @@ This project includes:
 
 ## 🚀 **How to Run**
 ### ✅ **Clone the repository:**
-```bash
+
 git clone [https://github.com/PrielDavid/ml-russian-house-prices.git]
-
 git lfs install
+---
 
----
----
 ## 👤 Author
 **Priel Davidpor** — BSc Economics & Statistics, Ben‑Gurion University  
 Connect via [LinkedIn](https://www.linkedin.com/in/priel-davidpor/) or open an issue.
