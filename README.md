@@ -48,7 +48,7 @@ This project includes:
 ## 🚀 **How to Run**
 ### ✅ **Clone the repository:**
 ```bash
-git clone https://github.com/Hagai-BY/house-price-prediction.git
+git clone [https://github.com/PrielDavid/ml-russian-house-prices).git]
 
 git lfs install
 
