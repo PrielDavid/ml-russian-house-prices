@@ -32,14 +32,14 @@ This repository contains my end‑to‑end workflow for the **Sberbank Russian�
 ---
 
 ## 🔍 Key EDA Insights
-* **Price distribution & outliers** – המחיר (₽) מפוזר בסקיו חיובי חריף; קיימים מקרים קיצוניים (top‑1 %) שמוטים במיוחד ויוחלפו בלוג‑טרנספורמציה או יוגבלו בקאפ.
-* **Spatial heterogeneity** – ניתוח “Average price / district” מראה פערי x3‑x4 בין מרכז מוסקבה לפרברים; מכאן שנדרש encoding מרחבי מפורט (District / Sub‑area).
+* **Price distribution & outliers** – Sale prices are strongly right‑skewed; the top ~1 % of observations are extreme. We either log‑transform the target or cap values at the 99th percentile to stabilise variance.
+* **Spatial heterogeneity** – Average price by district varies by a factor of 3‑4: central Moscow commands the highest ₽/m², whereas peripheral districts sit at the low end. This motivates a fine‑grained spatial encoding (e.g., District / Sub‑area).
 * **Data‑quality anomalies**  
-  * `life_sq > full_sq` או `life_sq < 9 m²`  →  סומנו NaN  
-  * `kitch_sq > 0.6 × life_sq`  →  NaN  
-  * ערכי `floor`, `max_floor` ו‑`build_year` בלתי‑סבירים הוסרו (לדוגמה build_year < 1500 או > 2025).
-* **Temporal pattern** – ספירת עסקאות חודשייות מצביעה על פיקים עקביים במרץ + ספטמבר, מה שמרמז על עונתיות אפשרית בביקוש.
-* **Structural relationships** – קורלציה חיובית בין `full_sq` לבין המחיר, אך עם diminishing returns מעל 120 m²; קשר מתון בין `num_room` למחיר (multicollinearity עם שטח).
+  * `life_sq > full_sq` or `life_sq < 9 m²` → set to NaN  
+  * `kitch_sq > 0.6 × life_sq` → set to NaN  
+  * Implausible `build_year` (< 1500 or > 2025), `floor > max_floor`, etc. → dropped
+* **Temporal pattern** – Monthly transaction counts show consistent peaks in **March** and **September**, indicating a demand seasonality that can be captured with calendar features.
+* **Structural relationships** – Price rises with `full_sq`, but the marginal gain tapers off beyond ~120 m² (diminishing returns). `num_room` also correlates with price but shows multicollinearity with size variables.
 
 ---
 
