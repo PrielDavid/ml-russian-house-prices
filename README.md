@@ -1,5 +1,5 @@
 
-# 🇷🇺 Russian Housing Price Prediction | Sberbank Kaggle Challenge 🏠
+#  Russian Housing Price Prediction | Sberbank Kaggle Challenge 🏠
 
 This repository contains my end‑to‑end workflow for the **Sberbank Russian Housing Market** competition on Kaggle, where the task is to predict apartment sale prices in Russia’s volatile economy. The repo walks through **data ingestion → EDA → feature engineering → model training & ensembling → submission generation**.
 
